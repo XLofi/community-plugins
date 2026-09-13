@@ -14,7 +14,7 @@ import time
 from contextlib import closing
 from pathlib import Path
 
-PILL_IDLE_SECONDS = 30
+PILL_IDLE_SECONDS = 5 * 60
 ACTIVE_SECONDS = 120
 EXITED_WINDOW_SECONDS = 600
 JOURNALS = Path.home() / ".omp/agent/sessions"
@@ -411,8 +411,7 @@ def session(
         state = "done"
     duration = max(0, int(now - metadata["first_ts"])) if metadata["first_ts"] is not None else max(0, int(age))
     quiet = (
-        live is None
-        and exited is None
+        exited is None
         and status == "running"
         and attention == "active"
         and age > PILL_IDLE_SECONDS

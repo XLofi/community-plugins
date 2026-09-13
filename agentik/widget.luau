@@ -343,7 +343,7 @@ local function render()
     local item = agent and agent.item or nil
     local choice = choice_needed(item)
     local state = agent and agent.state or nil
-    local quiet = agents == nil and not has_done_session() and quiet_session() or nil
+    local quiet = agents == nil and quiet_session() or nil
     local display_state = state or (quiet and (valid_states[quiet.state] and quiet.state or "working")) or nil
     local displayed_number = agent and agent.number or active
     local displayed_progress, progress_opacity = sync_progress(
@@ -358,9 +358,6 @@ local function render()
             height = 20,
             opacity = state_opacity,
         }))
-    elseif has_done_session() then
-        local path = ORB_DIR .. "/done-20-" .. tostring(done_frame_index()) .. ".svg"
-        table.insert(children, orb_image({ path = path, width = 20, height = 20 }))
     elseif quiet ~= nil then
         table.insert(children, orb_image({
             path = orb_path(display_state, "active", frame),
@@ -368,10 +365,13 @@ local function render()
             height = 20,
             opacity = 0.55,
         }))
+    elseif has_done_session() then
+        local path = ORB_DIR .. "/done-20-" .. tostring(done_frame_index()) .. ".svg"
+        table.insert(children, orb_image({ path = path, width = 20, height = 20 }))
     else
         table.insert(children, ui.glyph({ name = "sparkles", size = 18, color = "secondary" }))
     end
-    if show_count and not compact then
+    if show_count and not compact and active > 0 then
         table.insert(children, ui.label({
             text = tostring(displayed_number),
             color = active > 0 and "primary" or "secondary",
@@ -411,14 +411,11 @@ local function render()
         }))
     end
 
-    local tooltip = noctalia.trp("ui.active_agents", active)
+    local tooltip = quiet ~= nil
+        and noctalia.tr("ui.idle", { time = elapsed(quiet.idle) })
+        or noctalia.trp("ui.active_agents", active)
     local progress = progress_text(item or quiet)
     if progress ~= nil then tooltip = tooltip .. " · " .. progress end
-    if quiet ~= nil then
-        tooltip = tooltip .. " · " .. noctalia.tr("ui.idle", {
-            time = elapsed(quiet.idle),
-        })
-    end
     if choice then tooltip = tooltip .. " · " .. noctalia.tr("ui.choice_needed") end
     barWidget.setTooltip(tooltip)
     local container = compact and ui.column or ui.row
