@@ -410,13 +410,20 @@ def session(
     if status in {"completed", "failed", "cancelled"}:
         state = "done"
     duration = max(0, int(now - metadata["first_ts"])) if metadata["first_ts"] is not None else max(0, int(age))
+    quiet = (
+        live is None
+        and exited is None
+        and status == "running"
+        and attention == "active"
+        and age > PILL_IDLE_SECONDS
+    )
     cwd = metadata["cwd"]
     return {
         "id": path.stem.rsplit("_", 1)[-1], "project": Path(cwd).name if cwd else "terminal",
         "cwd": cwd, "activity": activity[:72], "task": metadata["task"][:72] if metadata["task"] else None,
         "state": state, "status": status, "attention": attention,
         "duration": duration, "idle": max(0, int(age)),
-        "quiet": live is None and exited is None and age > PILL_IDLE_SECONDS,
+        "quiet": quiet,
         "exited": exited,
         "agent": metadata["agent"][:72] if metadata["agent"] else None,
         "model": metadata["model"][:72] if metadata["model"] else None,
@@ -536,7 +543,10 @@ def main(encoded_excluded_projects: str | None = None) -> None:
         for path in JOURNALS.rglob("*.jsonl"):
             resolved = str(path.resolve())
             existing.add(resolved)
-            item = session(path, now, index, live=resolved in live_journals)
+            # An absent journal FD can be a normal gap between OMP writes. Let
+            # session() apply its short grace window before declaring exit.
+            liveness = True if resolved in live_journals else None
+            item = session(path, now, index, live=liveness)
             if item is None:
                 continue
             if item["project"] in excluded or (item["cwd"] and item["cwd"] in excluded):
