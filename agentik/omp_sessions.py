@@ -17,6 +17,7 @@ from pathlib import Path
 PILL_IDLE_SECONDS = 5 * 60
 ACTIVE_SECONDS = 120
 EXITED_WINDOW_SECONDS = 600
+PAUSED_RETENTION_SECONDS = EXITED_WINDOW_SECONDS
 JOURNALS = Path.home() / ".omp/agent/sessions"
 HERMES_DB = Path.home() / ".hermes/state.db"
 
@@ -416,6 +417,8 @@ def session(
         and attention == "active"
         and age > PILL_IDLE_SECONDS
     )
+    if quiet and age > PAUSED_RETENTION_SECONDS:
+        return None
     cwd = metadata["cwd"]
     return {
         "id": path.stem.rsplit("_", 1)[-1], "project": Path(cwd).name if cwd else "terminal",

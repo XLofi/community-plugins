@@ -1387,13 +1387,6 @@ local function session_row(item, show_task, show_attention)
                 color = "on_surface_variant",
             }),
         }
-        local idle = tonumber(item.idle) or 0
-        if idle >= 60 then
-            table.insert(status, ui.label({
-                text = noctalia.tr("ui.idle", { time = elapsed(idle) }),
-                color = "on_surface_variant",
-            }))
-        end
         if show_attention then
             table.insert(status, 1, ui.label({
                 text = attention_label(item),
