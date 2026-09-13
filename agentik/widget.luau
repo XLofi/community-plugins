@@ -247,6 +247,13 @@ local function attention_of(item)
     return "active"
 end
 
+local function pill_state_label(item, state)
+    local attention = attention_of(item)
+    if attention == "blocked" then return noctalia.tr("ui.attention_blocked") end
+    if attention == "waiting" then return noctalia.tr("ui.attention_waiting") end
+    return state_label(state)
+end
+
 local function choice_needed(item)
     return item ~= nil
         and attention_of(item) ~= "active"
@@ -383,7 +390,7 @@ local function render()
         if not compact then
             local state_text = quiet ~= nil
                 and noctalia.tr("ui.idle", { time = elapsed(quiet.idle) })
-                or state_label(display_state)
+                or pill_state_label(item, display_state)
             table.insert(children, ui.label({
                 key = "current-state",
                 text = state_text,

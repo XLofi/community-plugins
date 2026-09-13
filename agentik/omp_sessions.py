@@ -408,7 +408,9 @@ def session(
     if status == "waiting" or (attention == "active" and activity_state(activity) == "listening"):
         attention = "waiting"
     state = activity_state(activity)
-    if status in {"completed", "failed", "cancelled"}:
+    if status in {"blocked", "waiting"}:
+        state = "listening"
+    elif status in {"completed", "failed", "cancelled"}:
         state = "done"
     duration = max(0, int(now - metadata["first_ts"])) if metadata["first_ts"] is not None else max(0, int(age))
     quiet = (
